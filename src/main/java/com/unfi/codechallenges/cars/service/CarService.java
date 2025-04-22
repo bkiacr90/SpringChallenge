@@ -14,73 +14,83 @@ import java.util.Optional;
 @Service
 public class CarService {
 
-    private final CarRepository carRepository;
+   private static final Logger log = LoggerFactory.getLogger(CarService.class);
+	 private final CarRepository carRepository;
 
-    public CarService(CarRepository carRepository) {
-        this.carRepository = carRepository;
-    }
+	    public CarService(CarRepository carRepository) {
+	        this.carRepository = carRepository;
+	    }
 
-    public CarDto createCar(CarDto car) {
-        var newCar = new Car(car.getMake(), car.getModel(), car.getYear());
-        log.info("Creating car");
-        var createdCar = carRepository.save(newCar);
-        log.info("Created car with id: {}", createdCar.getId());
-        return CarDto.builder()
-                .id(createdCar.getId())
-                .make(createdCar.getMake())
-                .model(createdCar.getModel())
-                .year(createdCar.getYear())
-                .vin(createdCar.getVin())
-                .build();
-    }
+	    public CarDto createCar(CarDto car) {
+	    	var newCar = new Car(car.getMake(), car.getModel(), car.getYear());
+	    	newCar.setVin(car.getVin());
+	        log.info("Creating car");
+	        var createdCar = carRepository.save(newCar);
+	        log.info("Created car with id: {}", createdCar.getId());
+			 
+			 CarDto dto = new CarDto();
+			 dto.setId(createdCar.getId());
+			 dto.setMake(createdCar.getMake());
+			 dto.setModel(createdCar.getModel());
+			 dto.setYear(createdCar.getYear());
+			 dto.setVin(createdCar.getVin());
+			 return dto;
+			
+	    }
 
-    public CarDto update(CarDto car) {
-        Optional<Car> optionalCar = carRepository.findById(car.getId());
-        if (optionalCar.isPresent()) {
-            var foundCar = optionalCar.get();
-            foundCar.setMake(car.getModel());
-            foundCar.setModel(car.getModel());
-            foundCar.setYear(car.getYear());
-            foundCar.setVin(car.getVin());
-            foundCar.setIsActive(true);
-            var updatedCar = carRepository.save(foundCar);
-            return CarDto.builder()
-                    .id(updatedCar.getId())
-                    .make(updatedCar.getMake())
-                    .model(updatedCar.getModel())
-                    .year(updatedCar.getYear())
-                    .vin(updatedCar.getVin())
-                    .build();
-        } else {
-            throw new RuntimeException("Car not found");
-        }
-    }
+	    @Transactional
+	    public CarDto update(CarDto car) {
+	        Optional<Car> optionalCar = carRepository.findById(car.getId());
+	        if (optionalCar.isPresent()) {
+	            var foundCar = optionalCar.get();
+	            foundCar.setMake(car.getMake());
+	            foundCar.setModel(car.getModel());
+	            foundCar.setYear(car.getYear());
+	            foundCar.setVin(car.getVin());
+	            foundCar.setIsActive(true);
+	            var updatedCar = carRepository.save(foundCar);
+				  CarDto dto = new CarDto();
+					 dto.setId(updatedCar.getId());
+					 dto.setMake(updatedCar.getMake());
+					 dto.setModel(updatedCar.getModel());
+					 dto.setYear(updatedCar.getYear());
+					 dto.setVin(updatedCar.getVin());
+					 return dto;
+				 
+	        } else {
+	            throw new RuntimeException("Car not found");
+	        }
+		
+	    }
 
-    public void delete(CarDto car) {
-        Optional<Car> optionalCar = carRepository.findById(car.getId());
-        if (optionalCar.isPresent()) {
-            var foundCar = optionalCar.get();
-            log.info("Soft deleting car with id: {}", foundCar.getId());
-            foundCar.setIsActive(false);
-            carRepository.save(foundCar);
-        } else {
-            throw new RuntimeException("Car not found");
-        }
-    }
+	    @Transactional
+	    public void delete(Long id) {
+	        Optional<Car> optionalCar = carRepository.findById(id);
+	        if (optionalCar.isPresent()) {
+	            var foundCar = optionalCar.get();
+	            log.info("Soft deleting car with id: {}", foundCar.getId());
+	            foundCar.setIsActive(false);
+	            carRepository.save(foundCar);
+	        } else {
+	            throw new RuntimeException("Car not found");
+	        }
+	    }
 
-    public List<CarDto> getAll() {
-        var allCars = carRepository.findAllByIsActiveTrue();
-        List<CarDto> cars = new ArrayList();
-        for (Car car : allCars) {
-            cars.add(CarDto.builder()
-                    .id(car.getId())
-                    .make(car.getMake())
-                    .model(car.getModel())
-                    .year(car.getYear())
-                    .vin(car.getVin())
-                    .build()
-            );
-        }
-        return cars;
-    }
+	    public List<CarDto> getAll() {
+	        var allCars = carRepository.findAllByIsActiveTrue();
+	        List<CarDto> cars = new ArrayList<>();
+	        for (Car car : allCars) {
+				  
+				    CarDto dto = new CarDto();
+					 dto.setId(car.getId());
+					 dto.setMake(car.getMake());
+					 dto.setModel(car.getModel());
+					 dto.setYear(car.getYear());
+					 dto.setVin(car.getVin());
+					 cars.add(dto);
+					
+				 
+	        }
+	        return cars;
+	    }
 }

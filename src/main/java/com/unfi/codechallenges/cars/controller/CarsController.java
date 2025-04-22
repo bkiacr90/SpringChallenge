@@ -17,39 +17,52 @@ import java.util.List;
 @RequestMapping("/api/cars")
 public class CarsController {
 
-    private final CarService carService;
+     private static final Logger log = LoggerFactory.getLogger(CarsController.class);
+	 private final CarService carService;
 
-    public CarsController(CarService carService) {
-        this.carService = carService;
-    }
+	    public CarsController(CarService carService) {
+	        this.carService = carService;
+	    }
 
-    @GetMapping
-    public ResponseEntity<List<CarDto>> getAllCars() {
-        log.info("Getting all active cars");
-        return ResponseEntity.ok(carService.getAll());
-    }
+	    @GetMapping("/getAll")
+	    public ResponseEntity<List<CarDto>> getAllCars() {
+	        log.info("Getting all active cars");
+	        return ResponseEntity.ok(carService.getAll());
+	    }
 
-    @PostMapping
-    public ResponseEntity<CarDto> createCar(@RequestBody CarDto car) {
-        return ResponseEntity.ok(carService.createCar(car));
-    }
+	    @PostMapping("/createcar")
+	    public ResponseEntity<CarDto> createCar(@RequestBody CarDto car) {
+	    	log.info("Creating a new car");
+	        return ResponseEntity.ok(carService.createCar(car));
+	    }
 
-    @PostMapping(path = "/update")
-    public ResponseEntity<CarDto> updateCar(@RequestBody CarDto car) {
-        return ResponseEntity.ok(carService.update(car));
-    }
+		@PutMapping("/update/{id}")
+	    public ResponseEntity<CarDto> updateCar(@PathVariable Long id,@RequestBody CarDto car) {
+			log.info("Updating car with id: {}");
+			car.setId(id);
+	        return ResponseEntity.ok(carService.update(car));
+	    }
 
-    @PostMapping(path = "/delete")
-    public ResponseEntity<CarDto> deleteCar(@RequestBody CarDto car) {
-        carService.delete(car);
-        return ResponseEntity.ok(null);
-    }
+	    @DeleteMapping("/{id}")
+		 public ResponseEntity<String> deleteCar(@PathVariable("id") Long id){
+	    	 carService.delete(id);
+	    	 return new ResponseEntity<>("User successfully deleted!", HttpStatus.OK);
+	    }
+	    
 
-    // Custom exception handler for validation errors
-    @ExceptionHandler({ConstraintViolationException.class, MethodArgumentNotValidException.class})
-    public ResponseEntity<String> handleValidationExceptions(Exception e) {
-        log.error("Uh oh, an exception happened.");
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
+	    // Handle constraint violations
+	    @ExceptionHandler(ConstraintViolationException.class)
+	    public ResponseEntity<String> handleConstraintViolation(ConstraintViolationException e) {
+	        log.error("Constraint violation occurred", e);
+	        return ResponseEntity.badRequest().body("Constraint violation: " + e.getMessage());
+	    }
+
+	    // Handle method argument validation issues
+	    @ExceptionHandler(MethodArgumentNotValidException.class)
+	    public ResponseEntity<String> handleValidationError(MethodArgumentNotValidException e) {
+	        log.error("Validation failed", e);
+	        return ResponseEntity.badRequest().body("Validation error: " + e.getMessage());
+	    }
+
 
 }
